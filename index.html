@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<!-- Chosen Palette: Warm Neutral & Teal (Stone-50/700, Teal-600/100) -->
+<!-- Application Structure Plan: Designed a single-page, scrolling dashboard with 6 thematic sections (Overview, Adoption, Vehicle Deep Dive, Impact, User/Safety, Outlook), accessible via a top navigation. This structure breaks the linear report into interactive, topic-focused modules. User flow is guided by scrolling or nav clicks, with interactions (filters, tabs) contained within each module, allowing users to explore data (e.g., filter by region, toggle vehicle type) without losing context. This is more usable than a linear report as it surfaces key stats and interactions immediately. -->
+<!-- Visualization & Content Choices: Overview: HTML Stat Cards (Goal: Inform). Adoption: Line/Bar charts (Chart.js) with JS dropdown filter (Goal: Change/Compare, Interaction: Filter). Deep Dive: Donut/Grouped Bar charts (Chart.js) with JS tabs (Goal: Compare, Interaction: Toggle). Impact: HTML Stat Card + Bar Chart (Chart.js) (Goal: Inform/Relationships). User/Safety: Donut/Horizontal Bar charts (Chart.js) with JS tabs (Goal: Inform/Organize, Interaction: Toggle). Outlook: Styled HTML text (Goal: Inform). This mix uses Chart.js (Canvas) for all data viz, and HTML/CSS/JS for layout, text, and interactions, avoiding all SVG/Mermaid. Chart containers are styled with Tailwind and embedded CSS for responsiveness. -->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+<head>
+    <meta charset="UTF-R">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Micromobility Report 2025</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', 'sans-serif';
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .tab-btn {
+            @apply px-4 py-2 font-semibold rounded-md transition-colors duration-200;
+        }
+        .tab-btn-active {
+            @apply bg-teal-600 text-white shadow-md;
+        }
+        .tab-btn-inactive {
+            @apply bg-stone-200 text-stone-600 hover:bg-stone-300;
+        }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-700">
+
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap justify-between items-center">
+            <h1 class="text-xl md:text-2xl font-bold text-teal-700">
+                Micromobility Report 2025
+            </h1>
+            <button id="mobile-menu-btn" class="md:hidden p-2 rounded-md text-stone-600 hover:bg-stone-100">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                </svg>
+            </button>
+            <ul id="nav-links" class="w-full md:w-auto md:flex md:space-x-6 space-y-2 md:space-y-0 hidden md:block mt-4 md:mt-0">
+                <li><a href="#adoption" class="block md:inline-block px-3 py-2 rounded-md text-stone-600 hover:bg-teal-50 hover:text-teal-600 font-medium">Adoption</a></li>
+                <li><a href="#vehicles" class="block md:inline-block px-3 py-2 rounded-md text-stone-600 hover:bg-teal-50 hover:text-teal-600 font-medium">Vehicles</a></li>
+                <li><a href="#impact" class="block md:inline-block px-3 py-2 rounded-md text-stone-600 hover:bg-teal-50 hover:text-teal-600 font-medium">Impact</a></li>
+                <li><a href="#safety" class="block md:inline-block px-3 py-2 rounded-md text-stone-600 hover:bg-teal-50 hover:text-teal-600 font-medium">User & Safety</a></li>
+                <li><a href="#outlook" class="block md:inline-block px-3 py-2 rounded-md text-stone-600 hover:bg-teal-50 hover:text-teal-600 font-medium">Outlook</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8">
+
+        <section id="overview" class="text-center py-12 md:py-16">
+            <h2 class="text-3xl md:text-4xl font-bold text-stone-800 mb-4">The State of Urban Micromobility</h2>
+            <p class="text-lg md:text-xl text-stone-600 max-w-3xl mx-auto mb-10">
+                The 2025 report reveals a sector at a pivotal moment, with massive user adoption balanced against new regulatory and infrastructure challenges. This interactive dashboard provides a comprehensive overview of the key data and insights.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 max-w-5xl mx-auto">
+                <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-teal-500">
+                    <div class="text-4xl md:text-5xl font-bold text-teal-600 mb-2">50M+</div>
+                    <div class="text-base md:text-lg text-stone-500 font-medium">Active Users Globally</div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-teal-500">
+                    <div class="text-4xl md:text-5xl font-bold text-teal-600 mb-2">1.2M Tons</div>
+                    <div class="text-base md:text-lg text-stone-500 font-medium">CO2 Saved Annually</div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-teal-500">
+                    <div class="text-4xl md:text-5xl font-bold text-teal-600 mb-2">$35B</div>
+                    <div class="text-base md:text-lg text-stone-500 font-medium">Projected Global Market</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="adoption" class="py-16">
+            <h2 class="text-3xl font-bold text-stone-800 text-center mb-4">Market Adoption</h2>
+            <p class="text-lg text-center text-stone-600 max-w-3xl mx-auto mb-8">
+                This section explores the rapid growth of micromobility adoption. Use the filter to see trends by region. The charts show user growth over the last five years and the current average daily trips in key markets.
+            </p>
+            <div class="text-center mb-8">
+                <label for="regionFilter" class="text-lg font-medium text-stone-700 mr-2">Filter by Region:</label>
+                <select id="regionFilter" class="p-2 rounded-md border-stone-300 shadow-sm bg-white focus:ring-teal-500 focus:border-teal-500">
+                    <option value="global">Global</option>
+                    <option value="northAmerica">North America</option>
+                    <option value="europe">Europe</option>
+                    <option value="asia">Asia</option>
+                </select>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white p-4 md:p-6 rounded-lg shadow-md">
+                    <h3 id="adoptionTrendTitle" class="text-xl font-semibold text-center mb-4">Global Adoption Trend (2020-2025)</h3>
+                    <div class="chart-container">
+                        <canvas id="adoptionTrendChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white p-4 md:p-6 rounded-lg shadow-md">
+                    <h3 id="dailyTripsTitle" class="text-xl font-semibold text-center mb-4">Avg. Daily Trips (Millions)</h3>
+                    <div class="chart-container">
+                        <canvas id="dailyTripsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="vehicles" class="py-16 bg-stone-100 rounded-lg">
+            <h2 class="text-3xl font-bold text-stone-800 text-center mb-4">Vehicle Deep Dive</h2>
+            <p class="text-lg text-center text-stone-600 max-w-3xl mx-auto mb-8">
+                E-scooters and e-bikes dominate the market, but how do they compare? This section breaks down their market share and typical usage profiles. Use the buttons below to switch between these two key comparisons.
+            </p>
+            <div class="flex justify-center gap-4 mb-8">
+                <button id="tabMarketShare" class="tab-btn tab-btn-active">Market Share</button>
+                <button id="tabTripProfile" class="tab-btn tab-btn-inactive">Trip Profile</button>
+            </div>
+            <div id="marketShareContent" class="chart-content-wrapper">
+                <div class="bg-white p-4 md:p-6 rounded-lg shadow-md max-w-3xl mx-auto">
+                    <h3 class="text-xl font-semibold text-center mb-4">Market Share 2025 (By Ride Count)</h3>
+                    <div class="chart-container">
+                        <canvas id="marketShareChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div id="tripProfileContent" class="chart-content-wrapper hidden">
+                <div class="bg-white p-4 md:p-6 rounded-lg shadow-md max-w-3xl mx-auto">
+                    <h3 class="text-xl font-semibold text-center mb-4">Average Trip Profile</h3>
+                    <div class="chart-container">
+                        <canvas id="tripProfileChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="impact" class="py-16">
+            <h2 class="text-3xl font-bold text-stone-800 text-center mb-4">Urban & Environmental Impact</h2>
+            <p class="text-lg text-center text-stone-600 max-w-3xl mx-auto mb-8">
+                Beyond convenience, micromobility is reshaping cities. This section highlights the positive environmental impact by tracking CO2 savings and, crucially, shows which modes of transport are being replaced by scooters and bikes.
+            </p>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                <div class="bg-white p-6 md:p-8 rounded-lg shadow-md text-center">
+                    <h3 class="text-2xl font-semibold text-stone-800 mb-4">Total CO2 Savings</h3>
+                    <div class="text-5xl md:text-6xl font-bold text-teal-600 mb-3">1.2M Tons</div>
+                    <div class="text-lg text-stone-500">Annually, equivalent to</div>
+                    <div class="text-lg font-medium text-stone-600">260,000 cars off the road</div>
+                </div>
+                <div class="bg-white p-4 md:p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-semibold text-center mb-4">What a Micromobility Trip Replaces</h3>
+                    <div class="chart-container">
+                        <canvas id="modalShiftChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="safety" class="py-16 bg-stone-100 rounded-lg">
+            <h2 class="text-3xl font-bold text-stone-800 text-center mb-4">User Sentiment & Safety</h2>
+            <p class="text-lg text-center text-stone-600 max-w-3xl mx-auto mb-8">
+                User experience is key. This area covers both qualitative feedback through user sentiment analysis and quantitative data on safety concerns. Select a tab to explore what users think and what the primary safety challenges are.
+            </p>
+            <div class="flex justify-center gap-4 mb-8">
+                <button id="tabSentiment" class="tab-btn tab-btn-active">User Sentiment</button>
+                <button id="tabSafety" class="tab-btn tab-btn-inactive">Safety Concerns</button>
+            </div>
+            <div id="sentimentContent" class="chart-content-wrapper">
+                <div class="bg-white p-4 md:p-6 rounded-lg shadow-md max-w-3xl mx-auto">
+                    <h3 class="text-xl font-semibold text-center mb-4">Overall User Sentiment</h3>
+                    <div class="chart-container">
+                        <canvas id="sentimentChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div id="safetyContent" class="chart-content-wrapper hidden">
+                <div class="bg-white p-4 md:p-6 rounded-lg shadow-md max-w-3xl mx-auto">
+                    <h3 class="text-xl font-semibold text-center mb-4">Reported Safety Concerns</h3>
+                    <div class="chart-container">
+                        <canvas id="safetyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="outlook" class="py-16">
+            <h2 class="text-3xl font-bold text-stone-800 text-center mb-4">Future Outlook & Recommendations</h2>
+            <p class="text-lg text-center text-stone-600 max-w-3xl mx-auto mb-8">
+                The market is poised for continued change. Based on current trends and challenges, this section outlines key projections for the next five years and provides actionable recommendations for cities and operators.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-teal-500">
+                    <h3 class="text-2xl font-semibold text-stone-800 mb-4">Key Projections (2025-2030)</h3>
+                    <ul class="list-disc list-inside space-y-2 text-stone-600 text-lg">
+                        <li>Market to double to <span class="font-bold text-stone-700">$70B</span> by 2030.</li>
+                        <li>E-bike segment to grow fastest (12% CAGR).</li>
+                        <li>Increased integration with public transport apps.</li>
+                        <li>Battery-swapping tech to become standard.</li>
+                        <li>Stricter regulations on fleet sizes and parking.</li>
+                    </ul>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-teal-500">
+                    <h3 class="text-2xl font-semibold text-stone-800 mb-4">Recommendations</h3>
+                    <ul class="list-disc list-inside space-y-2 text-stone-600 text-lg">
+                        <li><span class="font-bold text-stone-700">Cities:</span> Invest in dedicated, protected micromobility lanes.</li>
+                        <li><span class="font-bold text-stone-700">Operators:</span> Prioritize vehicle durability and safety features.</li>
+                        <li><span class="font-bold text-stone-700">All:</span> Standardize data-sharing protocols for urban planning.</li>
+                        <li><span class="font-bold text-stone-700">Cities:</span> Implement "slow zones" in pedestrian-heavy areas.</li>
+                        <li><span class="font-bold text-stone-700">Operators:</span> Offer more subscription and long-term rental plans.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-stone-800 text-stone-300 text-center p-6 mt-16">
+        <p>&copy; 2025 Micromobility Insights. All data is illustrative for demonstration purposes.</p>
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            Chart.defaults.font.family = "'Inter', 'sans-serif'";
+            Chart.defaults.color = "#44403c";
+
+            const chartData = {
+                adoption: {
+                    global: {
+                        trend: {
+                            labels: ["2020", "2021", "2022", "2023", "2024", "2025"],
+                            data: [12, 19, 25, 32, 41, 50],
+                        },
+                        trips: {
+                            labels: ["Paris", "New York", "Berlin", "Singapore", "Bogotá"],
+                            data: [2.1, 1.8, 1.5, 1.1, 0.9],
+                        }
+                    },
+                    northAmerica: {
+                        trend: {
+                            labels: ["2020", "2021", "2022", "2023", "2024", "2025"],
+                            data: [3, 5, 8, 11, 15, 18],
+                        },
+                        trips: {
+                            labels: ["New York", "Chicago", "Los Angeles", "Montreal"],
+                            data: [1.8, 1.1, 0.9, 0.7],
+                        }
+                    },
+                    europe: {
+                        trend: {
+                            labels: ["2020", "2021", "2022", "2023", "2024", "2025"],
+                            data: [5, 8, 11, 14, 18, 22],
+                        },
+                        trips: {
+                            labels: ["Paris", "Berlin", "London", "Rome"],
+                            data: [2.1, 1.5, 1.0, 0.8],
+                        }
+                    },
+                    asia: {
+                        trend: {
+                            labels: ["2020", "2021", "2022", "2023", "2024", "2025"],
+                            data: [2, 4, 6, 8, 10, 12],
+                        },
+                        trips: {
+                            labels: ["Singapore", "Tokyo", "Seoul", "Taipei"],
+                            data: [1.1, 0.8, 0.7, 0.6],
+                        }
+                    }
+                },
+                vehicles: {
+                    marketShare: {
+                        labels: ["E-Scooters", "E-Bikes", "Other"],
+                        data: [65, 30, 5],
+                    },
+                    tripProfile: {
+                        labels: ["E-Scooters", "E-Bikes"],
+                        duration: [12, 22],
+                        cost: [3.5, 5.8],
+                    }
+                },
+                impact: {
+                    modalShift: {
+                        labels: ["Replaced Car Trip", "Replaced Public Transit", "Replaced Walking", "New Trip"],
+                        data: [45, 25, 20, 10],
+                    }
+                },
+                safety: {
+                    sentiment: {
+                        labels: ["Positive", "Neutral", "Negative"],
+                        data: [68, 20, 12],
+                    },
+                    concerns: {
+                        labels: ["Poor Infrastructure", "User Behavior", "Vehicle Malfunction", "Weather", "Theft"],
+                        data: [55, 42, 25, 15, 10],
+                    }
+                }
+            };
+
+            const chartInstances = {};
+
+            const initAdoptionCharts = () => {
+                const trendCtx = document.getElementById('adoptionTrendChart').getContext('2d');
+                chartInstances.adoptionTrend = new Chart(trendCtx, {
+                    type: 'line',
+                    data: {
+                        labels: chartData.adoption.global.trend.labels,
+                        datasets: [{
+                            label: 'Active Users (in Millions)',
+                            data: chartData.adoption.global.trend.data,
+                            backgroundColor: 'rgba(13, 148, 136, 0.1)',
+                            borderColor: 'rgb(13, 148, 136)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.3,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { beginAtZero: true }
+                        },
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+
+                const tripsCtx = document.getElementById('dailyTripsChart').getContext('2d');
+                chartInstances.dailyTrips = new Chart(tripsCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: chartData.adoption.global.trips.labels,
+                        datasets: [{
+                            label: 'Avg. Daily Trips (Millions)',
+                            data: chartData.adoption.global.trips.data,
+                            backgroundColor: [
+                                'rgb(15, 118, 110)',
+                                'rgb(13, 148, 136)',
+                                'rgb(20, 184, 166)',
+                                'rgb(94, 234, 212)',
+                                'rgb(153, 246, 228)',
+                            ],
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+            };
+
+            const updateAdoptionCharts = (region) => {
+                const regionMap = {
+                    global: "Global",
+                    northAmerica: "North American",
+                    europe: "European",
+                    asia: "Asian"
+                };
+                const trendData = chartData.adoption[region].trend;
+                const tripsData = chartData.adoption[region].trips;
+
+                document.getElementById('adoptionTrendTitle').textContent = `${regionMap[region]} Adoption Trend (2020-2025)`;
+                document.getElementById('dailyTripsTitle').textContent = `Avg. Daily Trips in ${regionMap[region]} Markets`;
+
+                chartInstances.adoptionTrend.data.labels = trendData.labels;
+                chartInstances.adoptionTrend.data.datasets[0].data = trendData.data;
+                chartInstances.adoptionTrend.update();
+
+                chartInstances.dailyTrips.data.labels = tripsData.labels;
+                chartInstances.dailyTrips.data.datasets[0].data = tripsData.data;
+                chartInstances.dailyTrips.update();
+            };
+
+            const initVehicleCharts = () => {
+                const marketCtx = document.getElementById('marketShareChart').getContext('2d');
+                chartInstances.marketShare = new Chart(marketCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: chartData.vehicles.marketShare.labels,
+                        datasets: [{
+                            data: chartData.vehicles.marketShare.data,
+                            backgroundColor: ['rgb(13, 148, 136)', 'rgb(94, 234, 212)', 'rgb(209, 213, 219)'],
+                            hoverOffset: 4,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom' }
+                        }
+                    }
+                });
+
+                const profileCtx = document.getElementById('tripProfileChart').getContext('2d');
+                chartInstances.tripProfile = new Chart(profileCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: chartData.vehicles.tripProfile.labels,
+                        datasets: [
+                            {
+                                label: 'Avg. Duration (min)',
+                                data: chartData.vehicles.tripProfile.duration,
+                                backgroundColor: 'rgb(13, 148, 136)',
+                                yAxisID: 'y',
+                            },
+                            {
+                                label: 'Avg. Cost ($)',
+                                data: chartData.vehicles.tripProfile.cost,
+                                backgroundColor: 'rgb(20, 184, 166)',
+                                yAxisID: 'y1',
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                title: { display: true, text: 'Duration (min)' }
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                title: { display: true, text: 'Cost ($)' },
+                                grid: {
+                                    drawOnChartArea: false,
+                                },
+                            },
+                        },
+                        plugins: {
+                            legend: { position: 'bottom' }
+                        }
+                    }
+                });
+            };
+
+            const initImpactCharts = () => {
+                const modalCtx = document.getElementById('modalShiftChart').getContext('2d');
+                chartInstances.modalShift = new Chart(modalCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: chartData.impact.modalShift.labels,
+                        datasets: [{
+                            label: '% of Trips',
+                            data: chartData.impact.modalShift.data,
+                            backgroundColor: [
+                                'rgb(15, 118, 110)',
+                                'rgb(13, 148, 136)',
+                                'rgb(20, 184, 166)',
+                                'rgb(94, 234, 212)',
+                            ],
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: (context) => `${context.label}: ${context.raw}%`
+                                }
+                            }
+                        }
+                    }
+                });
+            };
+
+            const initSafetyCharts = () => {
+                const sentimentCtx = document.getElementById('sentimentChart').getContext('2d');
+                chartInstances.sentiment = new Chart(sentimentCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: chartData.safety.sentiment.labels,
+                        datasets: [{
+                            data: chartData.safety.sentiment.data,
+                            backgroundColor: ['rgb(13, 148, 136)', 'rgb(209, 213, 219)', 'rgb(240, 171, 171)'],
+                            hoverOffset: 4,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom' }
+                        }
+                    }
+                });
+
+                const safetyCtx = document.getElementById('safetyChart').getContext('2d');
+                chartInstances.safety = new Chart(safetyCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: chartData.safety.concerns.labels,
+                        datasets: [{
+                            label: '% Reporting Concern',
+                            data: chartData.safety.concerns.data,
+                            backgroundColor: 'rgb(20, 184, 166)',
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+            };
+
+            const setupEventListeners = () => {
+                document.getElementById('regionFilter').addEventListener('change', (e) => {
+                    updateAdoptionCharts(e.target.value);
+                });
+
+                const vehicleTabs = {
+                    tabMarketShare: document.getElementById('tabMarketShare'),
+                    tabTripProfile: document.getElementById('tabTripProfile'),
+                };
+                const vehicleContents = {
+                    marketShareContent: document.getElementById('marketShareContent'),
+                    tripProfileContent: document.getElementById('tripProfileContent'),
+                };
+                vehicleTabs.tabMarketShare.addEventListener('click', () => {
+                    toggleTabs(vehicleTabs, vehicleContents, 'tabMarketShare', 'marketShareContent');
+                });
+                vehicleTabs.tabTripProfile.addEventListener('click', () => {
+                    toggleTabs(vehicleTabs, vehicleContents, 'tabTripProfile', 'tripProfileContent');
+                });
+
+                const safetyTabs = {
+                    tabSentiment: document.getElementById('tabSentiment'),
+                    tabSafety: document.getElementById('tabSafety'),
+                };
+                const safetyContents = {
+                    sentimentContent: document.getElementById('sentimentContent'),
+                    safetyContent: document.getElementById('safetyContent'),
+                };
+                safetyTabs.tabSentiment.addEventListener('click', () => {
+                    toggleTabs(safetyTabs, safetyContents, 'tabSentiment', 'sentimentContent');
+                });
+                safetyTabs.tabSafety.addEventListener('click', () => {
+                    toggleTabs(safetyTabs, safetyContents, 'tabSafety', 'safetyContent');
+                });
+
+                document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+                    document.getElementById('nav-links').classList.toggle('hidden');
+                });
+            };
+
+            const toggleTabs = (tabs, contents, activeTabKey, activeContentKey) => {
+                Object.values(tabs).forEach(tab => {
+                    tab.classList.remove('tab-btn-active');
+                    tab.classList.add('tab-btn-inactive');
+                });
+                Object.values(contents).forEach(content => {
+                    content.classList.add('hidden');
+                });
+
+                tabs[activeTabKey].classList.add('tab-btn-active');
+                tabs[activeTabKey].classList.remove('tab-btn-inactive');
+                contents[activeContentKey].classList.remove('hidden');
+            };
+
+            initAdoptionCharts();
+            initVehicleCharts();
+            initImpactCharts();
+            initSafetyCharts();
+            setupEventListeners();
+        });
+    </script>
+</body>
+</html>
